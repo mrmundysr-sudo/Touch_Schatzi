@@ -1,65 +1,123 @@
 name: Build Touch Schatzi APK
 on:
   push:
-    branches: [main]
+    branches: [main, claude/beautiful-archimedes-enml2c]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-      - name: Reassemble and verify uploaded source
+
+      - name: Reassemble and verify source + art chunks
         shell: bash
         run: |
           python3 - <<'PY'
-          import pathlib,hashlib,zipfile,os
-          manifest=pathlib.Path("touch-schatzi.zip.touchmanifest").read_text().splitlines()
-          meta=dict(line.split("=",1) for line in manifest[1:])
-          folder=pathlib.Path(".touch-uploads")/meta["sha256"]
-          chunks=[folder/f"{i:05d}" for i in range(int(meta["parts"]))]
-          for p in chunks:
-              if not p.is_file(): raise SystemExit(f"Missing upload chunk: {p}")
-          payload=b"".join(p.read_bytes() for p in chunks)
-          assert len(payload)==int(meta["size"]), "ZIP size mismatch"
-          assert hashlib.sha256(payload).hexdigest()==meta["sha256"], "ZIP SHA-256 mismatch"
-          pathlib.Path("touch-schatzi-reassembled.zip").write_bytes(payload)
-          with zipfile.ZipFile("touch-schatzi-reassembled.zip") as z:
-              for item in z.infolist():
-                  target=(pathlib.Path("unpacked")/item.filename).resolve()
-                  if not target.is_relative_to(pathlib.Path("unpacked").resolve()):
-                      raise SystemExit("Unsafe ZIP path")
-              z.extractall("unpacked")
-          projects=list(pathlib.Path("unpacked").rglob("settings.gradle"))+list(pathlib.Path("unpacked").rglob("settings.gradle.kts"))
-          if not projects: raise SystemExit("Source ZIP contains no Android Gradle project (settings.gradle)")
-          root=sorted({str(p.parent) for p in projects},key=lambda x:(x.count("/"),len(x)))[0]
-          pathlib.Path(os.environ["GITHUB_ENV"]).open("a").write(f"ANDROID_PROJECT_DIR={root}\n")
-          print("Android Gradle project:",root)
+          import pathlib, hashlib, zipfile, os, sys
+
+          def rebuild(manifest_name, out_name, extract_to):
+              lines = pathlib.Path(manifest_name).read_text().splitlines()
+              assert lines[0] == "TOUCH_CHUNKS_V1", f"{manifest_name}: bad header"
+              meta = dict(l.split("=", 1) for l in lines[1:] if "=" in l)
+              parts = int(meta["parts"])
+              folder = pathlib.Path(".touch-uploads") / meta["sha256"]
+              present = sorted(p.name for p in folder.iterdir())
+              expected = [f"{i:05d}" for i in range(parts)]
+              assert present == expected, f"{manifest_name}: chunk list mismatch {present[:3]}..."
+              payload = b"".join((folder / n).read_bytes() for n in expected)
+              assert len(payload) == int(meta["size"]), f"{manifest_name}: size {len(payload)} != {meta['size']}"
+              digest = hashlib.sha256(payload).hexdigest()
+              assert digest == meta["sha256"], f"{manifest_name}: sha256 mismatch {digest}"
+              pathlib.Path(out_name).write_bytes(payload)
+              root = pathlib.Path(extract_to).resolve()
+              with zipfile.ZipFile(out_name) as z:
+                  assert z.testzip() is None, f"{out_name}: corrupt zip"
+                  for item in z.infolist():
+                      if not (root / item.filename).resolve().is_relative_to(root):
+                          sys.exit("Unsafe ZIP path")
+                  z.extractall(root)
+              print(f"OK {manifest_name}: {parts} chunks, {len(payload)} bytes, sha256 {digest}")
+
+          rebuild("touch-schatzi.zip.touchmanifest", "touch-schatzi-reassembled.zip", "unpacked")
+          rebuild("touch_schatzi_visual_assets.zip.touchmanifest", "touch-schatzi-art-reassembled.zip", "unpacked_art")
+
+          projects = list(pathlib.Path("unpacked").rglob("settings.gradle")) + list(pathlib.Path("unpacked").rglob("settings.gradle.kts"))
+          if not projects:
+              sys.exit("Source ZIP contains no Android Gradle project")
+          root = sorted({str(p.parent) for p in projects}, key=lambda x: (x.count("/"), len(x)))[0]
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"ANDROID_PROJECT_DIR={root}\n")
+          print("Android Gradle project:", root)
           PY
+
+      - name: Add raw art pack to the game assets
+        shell: bash
+        run: |
+          set -e
+          dest="$ANDROID_PROJECT_DIR/app/src/main/assets/www/assets/art-source"
+          mkdir -p "$dest"
+          cp -r unpacked_art/. "$dest/"
+          n=$(find "$dest" -type f | wc -l)
+          echo "Copied $n art-pack files into $dest"
+          test "$n" -ge 18
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Accept Android SDK licenses and install platform
+        shell: bash
+        run: |
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
+
       - name: Build debug APK
         shell: bash
         run: |
           cd "$ANDROID_PROJECT_DIR"
-          if [ -f gradlew ]; then
-            chmod +x gradlew
-            ./gradlew --no-daemon assembleDebug
-          else
-            gradle --no-daemon assembleDebug
-          fi
-      - name: Upload APK
+          gradle --no-daemon --stacktrace assembleDebug
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          set -e
+          apk=$(ls "$ANDROID_PROJECT_DIR"/app/build/outputs/apk/debug/*.apk | head -1)
+          echo "APK: $apk ($(stat -c %s "$apk") bytes)"
+          BT="$ANDROID_HOME/build-tools/34.0.0"
+          "$BT/apksigner" verify --verbose --print-certs "$apk"
+          "$BT/aapt" dump badging "$apk" | grep -E "^package:|sdkVersion|launchable-activity"
+          "$BT/aapt" dump badging "$apk" | grep -q "name='com.touchschatzi.game'"
+          unzip -l "$apk" > apk-contents.txt
+          for f in index.html assets/manifest.json; do
+            grep -q "assets/www/${f}$" apk-contents.txt || { echo "MISSING $f"; exit 1; }
+          done
+          for f in $(find "$ANDROID_PROJECT_DIR/app/src/main/assets/www/assets" -path '*art-source*' -prune -o -type f -name '*.webp' -print); do
+            rel=${f#"$ANDROID_PROJECT_DIR/app/src/main/"}
+            grep -q " ${rel}$" apk-contents.txt || { echo "MISSING from APK: $rel"; exit 1; }
+          done
+          art=$(grep -c "assets/www/assets/art-source/" apk-contents.txt)
+          echo "Raw art-pack files in APK: $art"
+          test "$art" -ge 18
+          mkdir -p dist
+          cp "$apk" dist/TouchSchatzi-debug.apk
+          (cd dist && sha256sum TouchSchatzi-debug.apk | tee TouchSchatzi-debug.apk.sha256)
+          cp apk-contents.txt dist/
+
+      - name: Upload verified APK
         uses: actions/upload-artifact@v4
         with:
           name: touch-schatzi-debug-apk
-          path: unpacked/**/build/outputs/apk/debug/*.apk
+          path: dist/*
           if-no-files-found: error
