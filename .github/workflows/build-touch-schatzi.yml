@@ -53,15 +53,11 @@ jobs:
           print("Android Gradle project:", root)
           PY
 
-      - name: Add raw art pack to the game assets
+      - name: Check art pack contents
         shell: bash
         run: |
-          set -e
-          dest="$ANDROID_PROJECT_DIR/app/src/main/assets/www/assets/art-source"
-          mkdir -p "$dest"
-          cp -r unpacked_art/. "$dest/"
-          n=$(find "$dest" -type f | wc -l)
-          echo "Copied $n art-pack files into $dest"
+          n=$(find unpacked_art -type f | wc -l)
+          echo "Art pack files: $n"
           test "$n" -ge 18
 
       - name: Set up Java 17
@@ -103,24 +99,23 @@ jobs:
           for f in index.html assets/manifest.json; do
             grep -q "assets/www/${f}$" apk-contents.txt || { echo "MISSING $f"; exit 1; }
           done
-          for f in $(find "$ANDROID_PROJECT_DIR/app/src/main/assets/www/assets" -path '*art-source*' -prune -o -type f -name '*.webp' -print); do
+          for f in $(find "$ANDROID_PROJECT_DIR/app/src/main/assets/www/assets" -type f -name '*.webp' -print); do
             rel=${f#"$ANDROID_PROJECT_DIR/app/src/main/"}
             grep -q " ${rel}$" apk-contents.txt || { echo "MISSING from APK: $rel"; exit 1; }
           done
-          art=$(grep -c "assets/www/assets/art-source/" apk-contents.txt)
-          echo "Raw art-pack files in APK: $art"
-          test "$art" -ge 18
           mkdir -p dist
           cp "$apk" dist/TouchSchatzi-debug.apk
           (cd dist && sha256sum TouchSchatzi-debug.apk | tee TouchSchatzi-debug.apk.sha256)
           cp apk-contents.txt dist/
+          cp touch-schatzi-art-reassembled.zip dist/touch_schatzi_visual_assets.zip
+          ls -l dist
 
       - name: Upload workflow artifact (best effort)
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: touch-schatzi-debug-apk
-          path: dist/*
+          path: dist/TouchSchatzi-debug.apk*
           if-no-files-found: error
 
       - name: Publish APK as GitHub Release
@@ -129,7 +124,7 @@ jobs:
         shell: bash
         run: |
           tag="apk-build-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag" dist/TouchSchatzi-debug.apk dist/TouchSchatzi-debug.apk.sha256 \
+          gh release create "$tag" dist/TouchSchatzi-debug.apk dist/TouchSchatzi-debug.apk.sha256 dist/touch_schatzi_visual_assets.zip \
             --target "$GITHUB_SHA" --prerelease \
             --title "Touch Schatzi debug APK (build ${GITHUB_RUN_NUMBER})" \
             --notes "Verified debug APK. Source and art chunks SHA-256 checked, apksigner verified. SHA-256: $(cut -d' ' -f1 dist/TouchSchatzi-debug.apk.sha256)"
