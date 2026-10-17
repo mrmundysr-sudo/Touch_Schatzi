@@ -4,7 +4,7 @@ on:
     branches: [main, claude/beautiful-archimedes-enml2c]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -115,9 +115,22 @@ jobs:
           (cd dist && sha256sum TouchSchatzi-debug.apk | tee TouchSchatzi-debug.apk.sha256)
           cp apk-contents.txt dist/
 
-      - name: Upload verified APK
+      - name: Upload workflow artifact (best effort)
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: touch-schatzi-debug-apk
           path: dist/*
           if-no-files-found: error
+
+      - name: Publish APK as GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="apk-build-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" dist/TouchSchatzi-debug.apk dist/TouchSchatzi-debug.apk.sha256 \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "Touch Schatzi debug APK (build ${GITHUB_RUN_NUMBER})" \
+            --notes "Verified debug APK. Source and art chunks SHA-256 checked, apksigner verified. SHA-256: $(cut -d' ' -f1 dist/TouchSchatzi-debug.apk.sha256)"
+          echo "https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/TouchSchatzi-debug.apk"
