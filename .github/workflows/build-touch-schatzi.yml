@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -59,7 +59,22 @@ jobs:
           fi
       - name: Upload APK
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: touch-schatzi-debug-apk
           path: unpacked/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          retention-days: 3
+      - name: Publish APK as pre-release
+        if: success() && github.event_name == 'push'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s globstar nullglob
+          FILES=(unpacked/**/build/outputs/apk/debug/*.apk)
+          [ "${#FILES[@]}" -gt 0 ] || { echo "no APK found"; exit 1; }
+          gh release create "apk-${{ github.run_number }}-${{ github.run_attempt }}" "${FILES[@]}" \
+            --target "${{ github.sha }}" --prerelease \
+            --title "APK build ${{ github.run_number }} (${{ github.ref_name }})" \
+            --notes "Built from ${{ github.ref_name }} @ ${{ github.sha }}"
