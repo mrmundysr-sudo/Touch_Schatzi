@@ -1,0 +1,65 @@
+name: Build Touch Schatzi APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reassemble and verify uploaded source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,hashlib,zipfile,os
+          manifest=pathlib.Path("touch-schatzi.zip.touchmanifest").read_text().splitlines()
+          meta=dict(line.split("=",1) for line in manifest[1:])
+          folder=pathlib.Path(".touch-uploads")/meta["sha256"]
+          chunks=[folder/f"{i:05d}" for i in range(int(meta["parts"]))]
+          for p in chunks:
+              if not p.is_file(): raise SystemExit(f"Missing upload chunk: {p}")
+          payload=b"".join(p.read_bytes() for p in chunks)
+          assert len(payload)==int(meta["size"]), "ZIP size mismatch"
+          assert hashlib.sha256(payload).hexdigest()==meta["sha256"], "ZIP SHA-256 mismatch"
+          pathlib.Path("touch-schatzi-reassembled.zip").write_bytes(payload)
+          with zipfile.ZipFile("touch-schatzi-reassembled.zip") as z:
+              for item in z.infolist():
+                  target=(pathlib.Path("unpacked")/item.filename).resolve()
+                  if not target.is_relative_to(pathlib.Path("unpacked").resolve()):
+                      raise SystemExit("Unsafe ZIP path")
+              z.extractall("unpacked")
+          projects=list(pathlib.Path("unpacked").rglob("settings.gradle"))+list(pathlib.Path("unpacked").rglob("settings.gradle.kts"))
+          if not projects: raise SystemExit("Source ZIP contains no Android Gradle project (settings.gradle)")
+          root=sorted({str(p.parent) for p in projects},key=lambda x:(x.count("/"),len(x)))[0]
+          pathlib.Path(os.environ["GITHUB_ENV"]).open("a").write(f"ANDROID_PROJECT_DIR={root}\n")
+          print("Android Gradle project:",root)
+          PY
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build debug APK
+        shell: bash
+        run: |
+          cd "$ANDROID_PROJECT_DIR"
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew --no-daemon assembleDebug
+          else
+            gradle --no-daemon assembleDebug
+          fi
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: touch-schatzi-debug-apk
+          path: unpacked/**/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
