@@ -1,0 +1,99 @@
+{
+ "_readme": "Scene layout in ART coordinates. Portrait art = 841x1870, landscape art = 2523x1178. x is a fraction of screen width, y a fraction of art height (anchored to the bottom of the screen so everything stays glued to the table), w a fraction of art width. Edit freely.",
+ "art": {
+  "portrait": [
+   841,
+   1870
+  ],
+  "landscape": [
+   2523,
+   1178
+  ]
+ },
+ "portrait": {
+  "seats": {
+   "1": [
+    {
+     "x": 0.5,
+     "w": 0.46
+    }
+   ],
+   "2": [
+    {
+     "x": 0.27,
+     "w": 0.4
+    },
+    {
+     "x": 0.73,
+     "w": 0.36
+    }
+   ],
+   "3": [
+    {
+     "x": 0.185,
+     "w": 0.335
+    },
+    {
+     "x": 0.5,
+     "w": 0.37
+    },
+    {
+     "x": 0.815,
+     "w": 0.31
+    }
+   ]
+  },
+  "charBottom": 0.7,
+  "miniTop": 0.708,
+  "miniW": 0.3,
+  "machine": {
+   "x": 0.5,
+   "top": 0.772,
+   "w": 0.94
+  },
+  "controlsTop": 0.935
+ },
+ "landscape": {
+  "seats": {
+   "1": [
+    {
+     "x": 0.5,
+     "w": 0.19
+    }
+   ],
+   "2": [
+    {
+     "x": 0.27,
+     "w": 0.17
+    },
+    {
+     "x": 0.73,
+     "w": 0.16
+    }
+   ],
+   "3": [
+    {
+     "x": 0.13,
+     "w": 0.15
+    },
+    {
+     "x": 0.5,
+     "w": 0.17
+    },
+    {
+     "x": 0.87,
+     "w": 0.14
+    }
+   ]
+  },
+  "charBottom": 0.595,
+  "miniTop": 0.612,
+  "miniW": 0.125,
+  "machine": {
+   "x": 0.5,
+   "top": 0.725,
+   "w": 0.385
+  },
+  "controlsTop": 0.0
+ }
+}

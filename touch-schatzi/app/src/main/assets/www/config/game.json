@@ -1,0 +1,45 @@
+{
+  "rounds": 13,
+  "rollsPerTurn": 3,
+  "upperBonusThreshold": 63,
+  "upperBonus": 35,
+  "schatziBonus": 100,
+  "soloWinScore": 200,
+  "difficulty": {
+    "easy": {
+      "noise": 7.0,
+      "randomHold": 0.22,
+      "categoryNoise": 5.0,
+      "think": [
+        450,
+        750
+      ]
+    },
+    "medium": {
+      "noise": 2.4,
+      "randomHold": 0.04,
+      "categoryNoise": 1.6,
+      "think": [
+        350,
+        600
+      ]
+    },
+    "hard": {
+      "noise": 0.0,
+      "randomHold": 0.0,
+      "categoryNoise": 0.0,
+      "think": [
+        280,
+        480
+      ]
+    }
+  },
+  "pacing": {
+    "reelStagger": 0.13,
+    "spinMin": 0.6,
+    "opponentSpinMin": 0.38,
+    "betweenRolls": 450,
+    "afterScore": 700,
+    "fastMultiplier": 0.55
+  }
+}

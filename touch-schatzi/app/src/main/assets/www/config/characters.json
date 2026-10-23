@@ -1,0 +1,94 @@
+{
+  "_readme": "Characters are fully data-driven. 'asset' is a manifest slot id. 'eyes' are fractions of the cutout image (used for expression overlays). 'sheets' optionally maps a reaction state to a sprite sheet {src, cols, rows, frames, fps, loop}; when a state has no sheet the cutout is animated procedurally. Drop sheets in and they play automatically.",
+  "characters": {
+    "lily": {
+      "name": "Lily",
+      "asset": "char.girl",
+      "color": "#b66cff",
+      "voice": {
+        "pitch": 520,
+        "wave": "triangle"
+      },
+      "aspect": 0.7722,
+      "eyes": [
+        [
+          0.459,
+          0.29
+        ],
+        [
+          0.689,
+          0.363
+        ]
+      ],
+      "eyeR": 0.075,
+      "mouth": [
+        0.5,
+        0.455
+      ],
+      "sheets": {}
+    },
+    "scoobert": {
+      "name": "Scoobert",
+      "asset": "char.cat",
+      "color": "#d9a066",
+      "voice": {
+        "pitch": 760,
+        "wave": "sine"
+      },
+      "aspect": 0.7925,
+      "eyes": [
+        [
+          0.39,
+          0.366
+        ],
+        [
+          0.645,
+          0.447
+        ]
+      ],
+      "eyeR": 0.085,
+      "mouth": [
+        0.55,
+        0.52
+      ],
+      "sheets": {},
+      "hat": [
+        0.47,
+        0.17,
+        0.3,
+        -14
+      ]
+    },
+    "max": {
+      "name": "Max",
+      "asset": "char.boy",
+      "color": "#4a7dff",
+      "voice": {
+        "pitch": 330,
+        "wave": "square"
+      },
+      "aspect": 0.6964,
+      "eyes": [
+        [
+          0.38,
+          0.4
+        ],
+        [
+          0.62,
+          0.33
+        ]
+      ],
+      "eyeR": 0.075,
+      "mouth": [
+        0.52,
+        0.475
+      ],
+      "sheets": {}
+    }
+  },
+  "order": [
+    "lily",
+    "scoobert",
+    "max"
+  ]
+}
