@@ -1,0 +1,31 @@
+{
+  "_readme": "Every image/sound the game uses is looked up by SLOT ID here. To reskin: drop a new file in assets/ and change the path (or drop assets/manifest.override.json with only the slots you want to change). Missing or broken files fall back to a generated placeholder, so the app never crashes. Orientation variants: add '<slot>.landscape'.",
+  "version": 1,
+  "slots": {
+    "bg.splash":            { "src": "assets/bg/splash.webp",   "page": "page_01" },
+    "bg.menu":              { "src": "assets/bg/menu.webp",     "page": "page_02" },
+    "bg.gameplay":          { "src": "assets/bg/gameplay.webp", "page": "page_03" },
+    "bg.gameplay.landscape":{ "src": "assets/bg/gameplay_landscape.webp" },
+    "bg.scorecard":         { "src": "assets/bg/scorecard.webp","page": "page_06" },
+    "bg.win":               { "src": "assets/bg/win.webp",      "page": "page_04" },
+    "bg.win.landscape":     { "src": "assets/bg/win_landscape.webp" },
+    "bg.loss":              { "src": "assets/bg/loss.webp",     "page": "page_05" },
+    "bg.loss.landscape":    { "src": "assets/bg/loss_landscape.webp" },
+
+    "char.girl":            { "src": "assets/chars/girl.webp" },
+    "char.boy":             { "src": "assets/chars/boy.webp" },
+    "char.cat":             { "src": "assets/chars/cat.webp" },
+
+    "ui.slotMachine":       { "src": "assets/ui/slot_machine.webp" },
+    "ui.slotLever":         { "src": "assets/ui/slot_lever.webp" },
+    "ui.scorecard":         { "src": "assets/ui/scorecard.webp" },
+    "ui.youWin":            { "src": "assets/ui/you_win.webp" },
+    "ui.youLose":           { "src": "assets/ui/you_lose.webp" },
+    "ui.playAgain":         { "src": "assets/ui/play_again.webp" }
+  },
+  "audio": {
+    "_readme": "Optional sample overrides, e.g. \"spin\": \"assets/audio/spin.ogg\". Anything not listed uses the built-in synthesized sound.",
+    "music.menu": null,
+    "music.game": null
+  }
+}

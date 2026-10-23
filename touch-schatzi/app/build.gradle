@@ -1,0 +1,31 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.touchschatzi.game'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.touchschatzi.game"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // The whole game lives in src/main/assets/www (plain HTML/JS/CSS + art). No bundler needed.
+    androidResources {
+        // keep every asset byte-for-byte (webp/ogg/woff are already compressed)
+        noCompress 'webp', 'png', 'ogg', 'mp3', 'wav', 'woff2', 'ttf', 'json', 'js', 'css', 'html'
+    }
+}

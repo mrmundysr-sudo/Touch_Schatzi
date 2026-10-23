@@ -1,0 +1,213 @@
+{
+ "_readme": "Pixel coordinates inside the score card art (ui.scorecard). Change these if you swap in a different score card image. 'crop' = region shown in landscape (hides the banner so two cards fit side by side).",
+ "size": [
+  1024,
+  1536
+ ],
+ "boxes": {
+  "ones": [
+   377,
+   547,
+   112,
+   68
+  ],
+  "twos": [
+   377,
+   636,
+   112,
+   68
+  ],
+  "threes": [
+   377,
+   724,
+   112,
+   68
+  ],
+  "fours": [
+   377,
+   813,
+   112,
+   68
+  ],
+  "fives": [
+   377,
+   901,
+   112,
+   68
+  ],
+  "sixes": [
+   377,
+   990,
+   112,
+   68
+  ],
+  "threeKind": [
+   833,
+   546,
+   112,
+   66
+  ],
+  "fourKind": [
+   833,
+   625,
+   112,
+   66
+  ],
+  "fullHouse": [
+   833,
+   704,
+   112,
+   66
+  ],
+  "smallStraight": [
+   833,
+   782,
+   112,
+   66
+  ],
+  "largeStraight": [
+   833,
+   861,
+   112,
+   66
+  ],
+  "schatzi": [
+   833,
+   940,
+   112,
+   66
+  ],
+  "chance": [
+   833,
+   1019,
+   112,
+   66
+  ],
+  "upperTotal": [
+   350,
+   1094,
+   142,
+   76
+  ],
+  "lowerTotal": [
+   805,
+   1099,
+   140,
+   78
+  ],
+  "total": [
+   553,
+   1230,
+   340,
+   114
+  ]
+ },
+ "rows": {
+  "ones": [
+   72,
+   539,
+   423,
+   84
+  ],
+  "twos": [
+   72,
+   628,
+   423,
+   84
+  ],
+  "threes": [
+   72,
+   716,
+   423,
+   84
+  ],
+  "fours": [
+   72,
+   805,
+   423,
+   84
+  ],
+  "fives": [
+   72,
+   893,
+   423,
+   84
+  ],
+  "sixes": [
+   72,
+   982,
+   423,
+   84
+  ],
+  "threeKind": [
+   538,
+   540,
+   412,
+   76
+  ],
+  "fourKind": [
+   538,
+   619,
+   412,
+   76
+  ],
+  "fullHouse": [
+   538,
+   698,
+   412,
+   76
+  ],
+  "smallStraight": [
+   538,
+   776,
+   412,
+   76
+  ],
+  "largeStraight": [
+   538,
+   855,
+   412,
+   76
+  ],
+  "schatzi": [
+   538,
+   934,
+   412,
+   76
+  ],
+  "chance": [
+   538,
+   1013,
+   412,
+   76
+  ]
+ },
+ "crop": {
+  "landscape": [
+   0,
+   408,
+   1024,
+   990
+  ],
+  "portrait": [
+   0,
+   0,
+   1024,
+   1536
+  ]
+ },
+ "notes": {
+  "upper": [
+   72,
+   1168,
+   420,
+   26
+  ],
+  "lower": [
+   538,
+   1168,
+   412,
+   26
+  ]
+ }
+}
