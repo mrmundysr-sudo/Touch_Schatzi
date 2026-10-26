@@ -24,3 +24,5 @@ jobs:
       project_dir: touch-schatzi
       gradle_version: "8.7"
       sdk_packages: "platforms;android-34 build-tools;34.0.0"
+      # Owner hold: keep this DEV/TEST prerelease from being pruned by housekeeping (beyond-newest-3 rule). Remove once tested.
+      prune_keep_tags: "devtest-39901677591-1"
