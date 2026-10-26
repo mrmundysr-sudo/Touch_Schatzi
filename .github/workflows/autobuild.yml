@@ -1,5 +1,5 @@
-# Touch AutoBuild caller. Pinned to the reviewed hub commit (immutable SHA, tag v1.0.1); see autobuild/VERSIONING.md in touch-development.
-# Bump the SHA only through a reviewed PR.
+# Touch AutoBuild caller. PILOT of hub PR #11 (v1.2.0 candidate), pinned to immutable hub SHA 53092a9. Do not merge until the owner approves hub v1.2.0.
+# To abandon the pilot restore the v1.0.1 pin: 97ce9ff9e6e178052c3ac64f8a7a3ed1fdb1bf5c. See autobuild/VERSIONING.md in touch-development.
 # Builds every claude/** branch push and manual dispatch. Publishes only a labelled DEV/TEST prerelease when artifact upload fails.
 name: AutoBuild (dev branches)
 
@@ -17,10 +17,28 @@ concurrency:
 
 jobs:
   build:
-    uses: mrmundysr-sudo/touch-development/.github/workflows/android-build.yml@97ce9ff9e6e178052c3ac64f8a7a3ed1fdb1bf5c # v1.0.1
+    uses: mrmundysr-sudo/touch-development/.github/workflows/android-build.yml@53092a9ee212f3694c7c6c4e0ae9ae2a5f538df8 # PILOT: hub PR #11 (v1.2.0 candidate), not a release
     with:
       artifact_name: Touch-Schatzi-debug-${{ github.run_number }}
       java_version: "17"
       project_dir: touch-schatzi
       gradle_version: "8.7"
       sdk_packages: "platforms;android-34 build-tools;34.0.0"
+      # Pilot of the opt-in v1.2.0 inputs: a DEV/TEST prerelease (APK + SHA-256) for every green claude/** build.
+      delivery_mode: always
+      dev_branch_patterns: "claude/*"
+      dev_release_retention_days: 30
+      # Pilot safety: housekeeping only lists; it deletes nothing while the pilot runs (existing releases are untouched).
+      prune_dry_run: true
+
+  comment:
+    # Opt-in PR comment with the APK link. Only this job holds pull-requests: write.
+    needs: build
+    if: ${{ needs.build.outputs.apk_url != '' }}
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: mrmundysr-sudo/touch-development/.github/workflows/pr-comment.yml@53092a9ee212f3694c7c6c4e0ae9ae2a5f538df8 # PILOT: hub PR #11
+    with:
+      apk_url: ${{ needs.build.outputs.apk_url }}
+      release_url: ${{ needs.build.outputs.release_url }}
