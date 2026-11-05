@@ -99,7 +99,8 @@ export class PlayScreen {
       h('button.btn.gold.big', { onclick: () => { this.A.play('click'); this.pause(false); } }, 'RESUME'),
       h('div.tgls', tog('music', 'Music', s.music !== false, (v) => this.app.setSetting('music', v)), tog('sfx', 'Sound FX', s.sfx !== false, (v) => this.app.setSetting('sfx', v)),
         tog('trash', 'Trash talk', s.trash !== false, (v) => { this.app.setSetting('trash', v); this.talk.setEnabled(v); }), tog('hints', 'Hints', !!s.hints, (v) => { this.app.setSetting('hints', v); this.refreshHints(); }),
-        tog('fast', 'Fast opponents', !!s.fast, (v) => { this.app.setSetting('fast', v); this.fast = v; this.ffBtn.classList.toggle('on', v); })),
+        tog('fast', 'Fast opponents', !!s.fast, (v) => { this.app.setSetting('fast', v); this.fast = v; this.ffBtn.classList.toggle('on', v); }),
+        Haptics.supported() ? tog('haptics', 'Haptics', s.haptics !== false, (v) => { this.app.setSetting('haptics', v); if (v) Haptics.tap(); }) : null),
       h('div.row', h('button.btn.purple', { onclick: () => { this.A.play('click'); this.pause(false); this.restart(); } }, 'RESTART'), h('button.btn.purple', { onclick: () => { this.A.play('click'); this.quit(); } }, 'QUIT TO MENU'))));
     return el;
   }

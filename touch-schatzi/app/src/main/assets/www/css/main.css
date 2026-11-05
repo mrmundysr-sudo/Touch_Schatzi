@@ -11,7 +11,8 @@
   --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px); --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; height: 100%; overflow: hidden; background: #1b0a35; color: var(--cream); font-family: var(--body); -webkit-user-select: none; user-select: none; touch-action: manipulation; overscroll-behavior: none; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body { margin: 0; height: 100%; -webkit-touch-callout: none; overflow: hidden; background: #1b0a35; color: var(--cream); font-family: var(--body); -webkit-user-select: none; user-select: none; touch-action: manipulation; overscroll-behavior: none; }
 #app { position: fixed; inset: 0; overflow: hidden; }
 #boot { position: fixed; inset: 0; display: grid; place-items: center; background: #1b0a35; color: var(--gold); font: 900 22px var(--font); z-index: 999; }
 button { font: inherit; color: inherit; }
@@ -34,6 +35,7 @@ img { -webkit-user-drag: none; }
 .tgl.on { color: #fff; border-color: var(--gold); background: rgba(255, 210, 74, .18); }
 .tgl.on .knob { background: radial-gradient(circle at 35% 30%, #fff6b0, #ffc928 60%, #c77d00); box-shadow: 0 0 10px rgba(255, 210, 74, .9), inset 0 2px 3px rgba(255, 255, 255, .6); }
 .tgls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tgls .tgl:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; }
 
 /* ---------- avatar ---------- */
 .avatar { width: calc(44px * var(--u)); height: calc(44px * var(--u)); border-radius: 50%; border: 3px solid var(--c, var(--gold)); background-color: #3a1c6e; flex: none; box-shadow: 0 2px 5px rgba(0, 0, 0, .5), inset 0 0 6px rgba(0, 0, 0, .35); }
@@ -101,7 +103,7 @@ img { -webkit-user-drag: none; }
 }
 
 /* ---------- overlays ---------- */
-.overlay { position: absolute; inset: 0; display: none; place-items: center; background: rgba(14, 4, 30, .74); backdrop-filter: blur(3px); z-index: 60; padding: 18px; }
+.overlay { position: absolute; inset: 0; display: none; place-items: center; background: rgba(14, 4, 30, .74); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); z-index: 60; padding: 18px; }
 .overlay.show { display: grid; animation: scrIn .2s both; }
 .overlay .panel { width: min(92%, 420px); max-height: 92%; overflow: auto; display: flex; flex-direction: column; gap: calc(12px * var(--u)); align-items: stretch; text-align: center; animation: pop .35s cubic-bezier(.2, 1.4, .4, 1) both; }
 .overlay .panel.wide { text-align: left; align-items: center; }
@@ -292,4 +294,53 @@ img { -webkit-user-drag: none; }
   .res-title { left: 14%; top: calc(var(--st) + 3%); width: min(26vw, 52vh); transform: translateX(-50%); } .res-sub { left: 0; right: auto; width: 28%; text-align: center; top: calc(var(--st) + 3% + min(26vw, 52vh) * 1.02); font-size: calc(15px * var(--u)); }
   .board { left: auto; right: 4%; transform: none; top: calc(var(--st) + 10px); width: min(40vw, 380px); } .again { left: auto; right: 4%; transform: none; bottom: calc(var(--sb) + 4%); width: min(38vw, 340px); } @keyframes againPulse { 50% { transform: scale(1.06); filter: drop-shadow(0 0 22px rgba(255, 210, 74, .9)); } }
   .menu-link { right: auto; left: calc(var(--sl) + 12px); top: auto; bottom: calc(var(--sb) + 10px); }
+}
+
+/* ---------- menu: short screens and tablets ---------- */
+/* Short portrait phones (iPhone SE / mini-class, small Androids): tighten the menu so PLAY is always on screen. */
+@media (orientation: portrait) and (max-height: 760px) {
+  .menu-body { gap: 6px; padding-top: calc(var(--st) + 6px); padding-bottom: calc(var(--sb) + 8px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .menu .title { margin: 0; }
+  .menu .t-top { font-size: 26px; } .menu .t-main { font-size: 54px; } .menu .t-sub { font-size: 11px; margin-top: 2px; }
+  .menu .panel { padding: 7px 12px; border-radius: 16px; }
+  .menu .panel h3 { margin-bottom: 5px; font-size: 12px; }
+  .menu .opp { padding: 5px 4px 4px; gap: 2px; }
+  .menu .opp .avatar { width: 44px; height: 44px; }
+  .menu .count { margin-top: 4px; font-size: 12px; }
+  .menu .seg-b { padding: 4px; }
+  .menu .name-in { padding: 6px 10px; }
+  .menu .m-cta { gap: 6px; padding-top: 2px; }
+  .menu .btn.play { font-size: 30px; }
+}
+@media (orientation: portrait) and (max-height: 600px) {
+  .menu .t-main { font-size: 44px; } .menu .t-top { font-size: 22px; }
+  .menu .opp .avatar { width: 36px; height: 36px; } .menu .opp .o-name { font-size: 12px; }
+  .menu .btn.play { font-size: 26px; }
+}
+/* Short landscape phones (iPhone SE/mini, small Androids). */
+@media (orientation: landscape) and (max-height: 420px) {
+  .menu-body { gap: 4px 18px; padding-top: calc(var(--st) + 6px); padding-bottom: calc(var(--sb) + 6px); }
+  .menu .panel { padding: 5px 10px; border-radius: 14px; }
+  .menu .panel h3 { margin-bottom: 3px; font-size: 11px; }
+  .menu .opp { padding: 3px 5px; } .menu .opp .avatar { width: 34px; height: 34px; }
+  .menu .count { margin-top: 2px; font-size: 11px; }
+  .menu .seg-b { padding: 3px 4px; } .menu .name-in { padding: 5px 10px; }
+  .menu .tgls { gap: 5px; } .menu .tgl { padding: 3px 10px 3px 4px; } .menu .tgl .knob { width: 20px; height: 20px; }
+  .menu .t-main { font-size: 56px; } .menu .t-top { font-size: 28px; }
+}
+/* Tablets: scale the whole menu up and keep it a comfortable width instead of a stretched phone layout. */
+@media (min-width: 700px) and (min-height: 700px) {
+  .screen.menu { --u: 1.35; }
+}
+@media (min-width: 700px) and (min-height: 700px) and (orientation: portrait) {
+  .menu-body { width: min(100%, 760px); left: 50%; right: auto; transform: translateX(-50%); justify-content: space-between; }
+  .menu.in .menu-body { transform: translateX(-50%); }
+  .menu.out .menu-body { transform: translateX(-50%) scale(1.06); }
+}
+
+/* ---------- iOS / WebKit polish ---------- */
+/* iOS zooms the page when a text field under 16px is focused; keep the name field at 16px or more. */
+@supports (-webkit-touch-callout: none) {
+  .name-in { font-size: max(16px, calc(16px * var(--u))); }
+  .screen, .btn, .tgl, .seg-b, .opp { -webkit-tap-highlight-color: transparent; }
 }

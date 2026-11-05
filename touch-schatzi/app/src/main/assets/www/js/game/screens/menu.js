@@ -15,7 +15,7 @@ export class MenuScreen {
     this.count = h('div.count');
     const diff = h('div.seg', DIFFS.map(([k, label, n]) => h('button.seg-b' + (S.difficulty === k ? '.on' : ''), { 'data-k': k, onclick: (e) => { this.setDiff(k); } }, h('span.stars', '★'.repeat(n) + '☆'.repeat(3 - n)), label)));
     this.diffEl = diff;
-    const nameIn = h('input.name-in', { type: 'text', maxlength: '12', placeholder: 'You', value: S.name || '', oninput: (e) => this.app.setSetting('name', e.target.value) });
+    const nameIn = h('input.name-in', { type: 'text', maxlength: '12', placeholder: 'You', value: S.name || '', autocomplete: 'off', autocapitalize: 'words', autocorrect: 'off', spellcheck: 'false', enterkeyhint: 'done', 'aria-label': 'Your name', oninput: (e) => this.app.setSetting('name', e.target.value), onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); } });
     const tg = (key, label, def = true) => { const on = S[key] === undefined ? def : S[key]; const b = h('button.tgl' + (on ? '.on' : ''), { onclick: () => { const v = !b.classList.contains('on'); b.classList.toggle('on', v); this.app.setSetting(key, v); A.play('click'); } }, h('span.knob'), h('span.lbl', label)); return b; };
     this.play = h('button.btn.gold.play', { onclick: () => this.start() }, h('span', 'PLAY'));
     const how = h('button.btn.purple.small', { onclick: () => { A.play('click'); this.howTo(); } }, '? HOW TO PLAY');

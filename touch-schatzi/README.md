@@ -1,6 +1,6 @@
 # Touch Schatzi
 
-A Yahtzee-style game where the dice are a slot machine. Built as web tech (vanilla ES modules) inside a native Android WebView shell.
+A Yahtzee-style game where the dice are a slot machine. Built as web tech (vanilla ES modules) inside native shells: an Android WebView app (`app/`) and an iPhone/iPad app (`ios/`, see [ios/README.md](ios/README.md)). Both run the same game code in `app/src/main/assets/www`.
 
 **Honest note:** the game was tested in a browser (Chromium, portrait and landscape, full simulated games, rules tests). The Android shell (Java/Gradle) could not be compiled where it was written, so the first APK build is the first compile. If the build fails, paste the log to get a quick fix.
 

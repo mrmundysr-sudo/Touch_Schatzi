@@ -1,0 +1,135 @@
+# Touch Schatzi iOS build: tests, simulator screenshots of the real app, and an unsigned device build.
+# Runs on claude/** pushes that touch the iOS project or the shared web game, and on manual dispatch.
+# No signing material is used or needed here: signing/TestFlight happens on the owner's Mac (see touch-schatzi/ios/README.md).
+name: iOS build
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "touch-schatzi/ios/**"
+      - "touch-schatzi/app/src/main/assets/www/**"
+      - "touch-schatzi/tests/**"
+      - ".github/workflows/ios-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: touch-schatzi
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        run: |
+          xcodebuild -version
+          swift --version
+          node --version || true
+
+      - name: Web game rules tests
+        run: node --test tests/rules.test.mjs
+
+      - name: Xcode project is in sync with its generator
+        run: |
+          python3 ios/tools/gen_xcodeproj.py
+          git diff --exit-code -- ios/TouchSchatzi.xcodeproj
+
+      - name: Pick simulators
+        run: |
+          pick() {
+            xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          prefix = sys.argv[1]
+          data = json.load(sys.stdin)['devices']
+          for runtime in sorted((r for r in data if 'iOS' in r), reverse=True):
+              for d in data[runtime]:
+                  if d['name'].startswith(prefix) and d.get('isAvailable', True):
+                      print(d['udid']); raise SystemExit
+          " "$1"
+          }
+          echo "IPHONE_UDID=$(pick iPhone)" >> "$GITHUB_ENV"
+          echo "IPAD_UDID=$(pick iPad)" >> "$GITHUB_ENV"
+          echo "iPhone: $(pick iPhone)  iPad: $(pick iPad)"
+
+      - name: Unit tests (simulator)
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild test \
+            -project ios/TouchSchatzi.xcodeproj -scheme TouchSchatzi \
+            -destination "platform=iOS Simulator,id=$IPHONE_UDID" \
+            -derivedDataPath build/sim \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build/xcodebuild-test.log | tail -n 80
+
+      - name: Launch the real app in the simulators and take screenshots
+        run: |
+          mkdir -p shots
+          APP=$(find build/sim -name TouchSchatzi.app -path '*Debug-iphonesimulator*' | head -1)
+          echo "App: $APP"
+          shoot() { # udid label query wait-seconds
+            xcrun simctl terminate "$1" com.touchschatzi.game 2>/dev/null || true
+            if [ -n "$3" ]; then xcrun simctl launch "$1" com.touchschatzi.game -TSStartQuery "$3"; else xcrun simctl launch "$1" com.touchschatzi.game; fi
+            sleep "$4"
+            xcrun simctl io "$1" screenshot "shots/$2.png"
+          }
+          for DEV in iphone ipad; do
+            if [ "$DEV" = iphone ]; then UDID="$IPHONE_UDID"; else UDID="$IPAD_UDID"; fi
+            [ -n "$UDID" ] || continue
+            xcrun simctl boot "$UDID" || true
+            xcrun simctl bootstatus "$UDID" -b
+            xcrun simctl install "$UDID" "$APP"
+            shoot "$UDID" "$DEV-1-splash" "" 2
+            shoot "$UDID" "$DEV-2-menu" "screen=menu" 6
+            shoot "$UDID" "$DEV-3-play" "screen=play&opp=lily,scoobert,max&diff=medium" 9
+            xcrun simctl shutdown "$UDID" || true
+          done
+          ls -la shots
+
+      - name: Release build for device (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project ios/TouchSchatzi.xcodeproj -scheme TouchSchatzi -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath build/device \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            | tail -n 40
+          APP=build/device/Build/Products/Release-iphoneos/TouchSchatzi.app
+          test -f "$APP/www/index.html"
+          test -f "$APP/www/js/main.js"
+          test -f "$APP/Assets.car"
+          test -f "$APP/PrivacyInfo.xcprivacy"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName" "$APP/Info.plist"
+          mkdir -p out/Payload
+          cp -R "$APP" out/Payload/
+          (cd out && zip -qr TouchSchatzi-unsigned.ipa Payload)
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Touch-Schatzi-ios-screenshots-${{ github.run_number }}
+          path: touch-schatzi/shots
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Touch-Schatzi-ios-unsigned-${{ github.run_number }}
+          path: |
+            touch-schatzi/out/TouchSchatzi-unsigned.ipa
+            touch-schatzi/build/xcodebuild-test.log
+          retention-days: 3
+          if-no-files-found: ignore
